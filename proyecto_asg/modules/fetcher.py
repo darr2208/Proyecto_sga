@@ -3,9 +3,14 @@ import pandas as pd
 from config import SYMBOLS_SP500, SYMBOLS_SP500_ASG, PERIODO, INTERVALO
 
 def _descargar(symbols):
+    if not symbols:
+        raise ValueError("La lista de símbolos está vacía. Revisa config.py")
+
     data = yf.download(symbols, period=PERIODO, interval=INTERVALO, auto_adjust=True)
 
-    # Si hay múltiples columnas y son MultiIndex, selecciona "Close"
+    if data.empty:
+        raise ValueError(f"No se pudieron descargar datos para: {symbols}")
+
     if isinstance(data.columns, pd.MultiIndex):
         if "Close" in data.columns.levels[0]:
             precios = data["Close"]
@@ -14,7 +19,6 @@ def _descargar(symbols):
         else:
             raise KeyError("No se encontró columna 'Close' ni 'Adj Close' en los datos descargados.")
     else:
-        # Si es un único símbolo, convierte en DataFrame
         if "Close" in data.columns:
             precios = pd.DataFrame(data["Close"])
         elif "Adj Close" in data.columns:
@@ -31,3 +35,5 @@ def obtener_datos_sp500():
 
 def obtener_datos_sp500_asg():
     return _descargar(SYMBOLS_SP500_ASG)
+
+
